@@ -31,7 +31,7 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--task_name', type=str, required=False, default='long_term_forecast_GPHT',
                         help='task name, options:[long_term_forecast, short_term_forecast, imputation, classification, anomaly_detection]')
-    parser.add_argument('--is_training', type=int, required=False, default=0, help='status')
+    parser.add_argument('--is_training', type=int, required=False, default=1, help='status')
     parser.add_argument('--model_id', type=str, required=False, default='test', help='model id')
     parser.add_argument('--model', type=str, required=False, default='GPHT',
                         help='model name, options: [Autoformer, Transformer, TimesNet]')
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     if args.is_training:
         mae_list, mse_list = [], []
         for ii in range(args.itr):
-            if args.task_name == 'long_term_forecast_ar':
+            if args.task_name == 'long_term_forecast_GPHT':
                 setting = '{}_{}_{}_dm{}_dff{}_pt{}_el{}_d{}_h{}_lr{}_{}_{}_{}_{}'.format(
                     args.task_name, args.data, args.model, args.GT_d_model, args.GT_d_ff, args.GT_patch_len,
                     args.GT_e_layers, args.depth, args.n_heads, args.learning_rate, args.pooling, args.seq_len,

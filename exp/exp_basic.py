@@ -26,7 +26,7 @@ class Exp_Basic(object):
             'FiLM': FiLM,
             'iTransformer': iTransformer,
             'Koopa': Koopa,
-            'GTv2': GPHT,
+            'GPHT': GPHT,
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)

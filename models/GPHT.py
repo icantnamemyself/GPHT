@@ -105,12 +105,7 @@ class Model(nn.Module):
         for i, enc in enumerate(self.encoders):
             out_enc = enc(x_enc)
             dec_out += out_enc[:, -seq_len:, :]
-            if self.configs.interpolate:
-                first_token = enc.down_sample(x_enc[:, :self.configs.token_len, :].permute(0, 2, 1))
-                ar_roll = torch.nn.functional.interpolate(first_token, scale_factor=enc.multipiler,
-                                                          mode='linear').permute(0, 2, 1)
-            else:
-                ar_roll = torch.zeros((x_enc.shape[0], self.configs.token_len, x_enc.shape[2])).to(x_enc.device)
+            ar_roll = torch.zeros((x_enc.shape[0], self.configs.token_len, x_enc.shape[2])).to(x_enc.device)
             ar_roll = torch.cat([ar_roll, out_enc], dim=1)[:, :-self.configs.token_len, :]
             x_enc = x_enc - ar_roll
 
