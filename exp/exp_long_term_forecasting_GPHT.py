@@ -172,7 +172,8 @@ class Exp_Long_Term_Forecast_GPHT(Exp_Basic):
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
-            test_loss = self.vali(test_data, test_loader, criterion)
+            # test_loss = self.vali(test_data, test_loader, criterion)
+            _, test_loss = self.test(setting)
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
@@ -215,16 +216,12 @@ class Exp_Long_Term_Forecast_GPHT(Exp_Basic):
                 batch_y2 = batch_y2[:, :, f_dim:]
                 true = batch_y2
                 batch_x = batch_x.float().to(self.device)
-                loss_san = []
-                loss_token = []
                 for j in range(itrs):
                     if not j:
                         batch_x = batch_x.float().to(self.device)
                     else:
-                        # batch_x = torch.cat([batch_x, pred_tmp[-1]], dim=1)
                         batch_x = torch.cat([batch_x, pred_tmp[-1]], dim=1)[:, -self.args.seq_len:, :]
 
-                    # 还有问题
                     batch_x_mark = batch_y_mark = dec_inp = None
                     if self.args.use_amp:
                         with torch.cuda.amp.autocast():
@@ -238,21 +235,7 @@ class Exp_Long_Term_Forecast_GPHT(Exp_Basic):
 
                         else:
                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-                    if self.args.series_stable == 'san':
-                        outputs, mean_pred, std_pred = outputs
-                        mean_label = torch.mean(
-                            batch_y[:, j * self.args.token_len:(j + 1) * self.args.token_len, f_dim:], dim=1)
-                        std_label = torch.std(
-                            batch_y[:, j * self.args.token_len:(j + 1) * self.args.token_len, f_dim:], dim=1)
-                        loss_san.append(
-                            nn.functional.mse_loss(mean_pred.squeeze(1), mean_label).cpu().numpy() + \
-                            nn.functional.mse_loss(std_pred.squeeze(1), std_label).cpu().numpy())
-                        loss_token.append(nn.functional.mse_loss(
-                            outputs[:, -self.args.token_len:, f_dim:],
-                            batch_y[:, j * self.args.token_len:(j + 1) * self.args.token_len,
-                            f_dim:]).cpu().numpy())
-                    else:
-                        outputs = outputs[0] if isinstance(outputs, tuple) else outputs
+                    outputs = outputs[0] if isinstance(outputs, tuple) else outputs
                     pred_tmp.append(outputs[:, -self.args.token_len:, f_dim:])
 
                 pred = torch.cat(pred_tmp, dim=1).detach().cpu().numpy()[:, :self.args.ar_pred_len, :]
@@ -275,10 +258,4 @@ class Exp_Long_Term_Forecast_GPHT(Exp_Basic):
 
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}'.format(mse, mae))
-        # f = open("result_long_term_forecast.txt", 'a')
-        # f.write(setting + "  \n")
-        # f.write('mse:{}, mae:{}'.format(mse, mae))
-        # f.write('\n')
-        # f.write('\n')
-        # f.close()
         return mae, mse

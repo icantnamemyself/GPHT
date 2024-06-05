@@ -3,10 +3,6 @@ import os
 import ast
 import torch
 from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast
-from exp.exp_imputation import Exp_Imputation
-from exp.exp_short_term_forecasting import Exp_Short_Term_Forecast
-from exp.exp_anomaly_detection import Exp_Anomaly_Detection
-from exp.exp_classification import Exp_Classification
 from exp.exp_long_term_forecasting_GPHT import Exp_Long_Term_Forecast_GPHT
 import random
 import numpy as np
@@ -39,19 +35,19 @@ if __name__ == '__main__':
     parser.add_argument('--GT_d_model', type=int, default=512)
     parser.add_argument('--GT_d_ff', type=int, default=2048)
     parser.add_argument('--token_len', type=int, default=48)
-    parser.add_argument('--GT_patch_len', type=my_list, default=[6, 12, 24, 48])
+    parser.add_argument('--GT_pooling_rate', type=my_list, default=[8, 4, 2, 1])
     parser.add_argument('--GT_e_layers', type=int, default=3)
     parser.add_argument('--depth', type=int, default=4)
-    parser.add_argument('--pooling', type=str, default='max')
-    parser.add_argument('--norm', type=str, default='ln')
-    parser.add_argument('--load_pretrain', type=int, default=0)
+    parser.add_argument('--load_pretrain', type=int, default=0, help='load pretrained model for further fine-tuning')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/')
-    parser.add_argument('--transfer_data', type=str, required=False, default='ETTm2', help='dataset type')
+
+    # testing dataset for GPHT
+    parser.add_argument('--transfer_data', type=str, required=False, default='ETTh1', help='dataset type')
     parser.add_argument('--transfer_root_path', type=str, default='dataset/ETT-small/',
                         help='root path of the data file')
-    parser.add_argument('--transfer_data_path', type=str, default='ETTm2.csv', help='data file')
+    parser.add_argument('--transfer_data_path', type=str, default='ETTh1.csv', help='data file')
 
-    parser.add_argument('--pretrain_batch_size', type=int, default=1024, help='batch size of train input data')
+    parser.add_argument('--pretrain_batch_size', type=int, default=1024, help='batch size of pre-train input data')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--percent', type=int, default=100)
 
@@ -66,21 +62,17 @@ if __name__ == '__main__':
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
 
-    # forecasting task
+    # settings of auto-regressive training for GPHT, and of training&testing for other models
     parser.add_argument('--seq_len', type=int, default=336, help='input sequence length')
     parser.add_argument('--label_len', type=int, default=48, help='start token length')
     parser.add_argument('--pred_len', type=int, default=48, help='prediction sequence length')
+    # settings of auto-regressive testing for GPHT
     parser.add_argument('--ar_seq_len', type=int, default=336)
     parser.add_argument('--ar_pred_len', type=int, default=96)
+
+
     parser.add_argument('--seasonal_patterns', type=str, default='Monthly', help='subset for M4')
     parser.add_argument('--inverse', action='store_true', help='inverse output data', default=False)
-
-    # inputation task
-    parser.add_argument('--mask_rate', type=float, default=0.25, help='mask ratio')
-
-    # anomaly detection task
-    parser.add_argument('--anomaly_ratio', type=float, default=0.25, help='prior anomaly ratio (%)')
-
     # model define
     parser.add_argument('--top_k', type=int, default=5, help='for TimesBlock')
     parser.add_argument('--num_kernels', type=int, default=6, help='for Inception')
@@ -139,25 +131,17 @@ if __name__ == '__main__':
 
     if args.task_name == 'long_term_forecast':
         Exp = Exp_Long_Term_Forecast
-    elif args.task_name == 'short_term_forecast':
-        Exp = Exp_Short_Term_Forecast
-    elif args.task_name == 'imputation':
-        Exp = Exp_Imputation
-    elif args.task_name == 'anomaly_detection':
-        Exp = Exp_Anomaly_Detection
-    elif args.task_name == 'classification':
-        Exp = Exp_Classification
     else:
         Exp = Exp_Long_Term_Forecast_GPHT
+        assert args.token_len == args.pred_len, 'GPHT should be trained in auto-regressive manner!'
 
     if args.is_training:
         mae_list, mse_list = [], []
         for ii in range(args.itr):
             if args.task_name == 'long_term_forecast_GPHT':
-                setting = '{}_{}_{}_dm{}_dff{}_pt{}_el{}_d{}_h{}_lr{}_{}_{}_{}_{}'.format(
-                    args.task_name, args.data, args.model, args.GT_d_model, args.GT_d_ff, args.GT_patch_len,
-                    args.GT_e_layers, args.depth, args.n_heads, args.learning_rate, args.pooling, args.seq_len,
-                    args.norm, ii
+                setting = '{}_{}_{}_dm{}_dff{}_pr{}_el{}_d{}_sq{}_{}'.format(
+                    args.task_name, args.data, args.model, args.GT_d_model, args.GT_d_ff, args.GT_pooling_rate,
+                    args.GT_e_layers, args.depth, args.seq_len, ii
                 )
             else:
                 # setting record of experiments
@@ -194,11 +178,10 @@ if __name__ == '__main__':
     else:
         mae_list, mse_list = [], []
         for ii in range(args.itr):
-            if args.task_name == 'long_term_forecast_ar':
-                setting = '{}_{}_{}_dm{}_dff{}_pt{}_el{}_d{}_h{}_lr{}_{}_{}_{}_{}'.format(
-                    args.task_name, args.data, args.model, args.GT_d_model, args.GT_d_ff, args.GT_patch_len,
-                    args.GT_e_layers, args.depth, args.n_heads, args.learning_rate, args.pooling, args.seq_len,
-                    args.norm, ii
+            if args.task_name == 'long_term_forecast_GPHT':
+                setting = '{}_{}_{}_dm{}_dff{}_pr{}_el{}_d{}_sq{}_{}'.format(
+                    args.task_name, args.data, args.model, args.GT_d_model, args.GT_d_ff, args.GT_pooling_rate,
+                    args.GT_e_layers, args.depth, args.seq_len, ii
                 )
             else:
                 setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(

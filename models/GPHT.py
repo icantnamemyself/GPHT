@@ -24,12 +24,12 @@ class GPHTBlock(nn.Module):
     def __init__(self, configs, depth):
         super().__init__()
 
-        self.multipiler = configs.pred_len // configs.GT_patch_len[depth]
-        self.down_sample = nn.AvgPool1d(
-            self.multipiler) if configs.pooling == 'avg' else nn.MaxPool1d(self.multipiler)
+        self.multipiler = configs.GT_pooling_rate[depth]
+        self.patch_size = configs.token_len // self.multipiler
+        self.down_sample = nn.MaxPool1d(self.multipiler)
         d_model = configs.GT_d_model
-        self.patch_embedding = PatchEmbedding(d_model, configs.GT_patch_len[depth],
-                                              configs.GT_patch_len[depth], 0, configs.dropout)
+        d_ff = configs.GT_d_ff
+        self.patch_embedding = PatchEmbedding(d_model, self.patch_size, self.patch_size, 0, configs.dropout)
 
         self.encoder = Encoder(
             [
@@ -39,14 +39,12 @@ class GPHTBlock(nn.Module):
                                       output_attention=configs.output_attention), d_model,
                         configs.n_heads),
                     d_model,
-                    4 * d_model,
+                    d_ff,
                     dropout=configs.dropout,
                     activation=configs.activation,
-                    norm=configs.norm
                 ) for l in range(configs.GT_e_layers)
             ],
-            norm_layer=torch.nn.LayerNorm(d_model) if configs.norm == 'ln' else torch.nn.BatchNorm1d(
-                d_model)
+            norm_layer=torch.nn.LayerNorm(d_model)
         )
         self.forecast_head = nn.Linear(d_model, configs.pred_len)
 
@@ -73,26 +71,15 @@ class GPHTBlock(nn.Module):
 
 
 class Model(nn.Module):
-    """
-    Paper link: https://arxiv.org/pdf/2211.14730.pdf
-    """
-
-    def __init__(self, configs, patch_len=16, stride=8):
-        """
-        patch_len: int, patch len for patch_embedding
-        stride: int, stride for patch_embedding
-        """
+    def __init__(self, configs):
         super().__init__()
-        self.task_name = configs.task_name
-        self.seq_len = configs.seq_len
-        self.pred_len = configs.pred_len
         self.configs = configs
 
         self.encoders = nn.ModuleList([
             GPHTBlock(configs, i)
             for i in range(configs.depth)])
 
-    def forecast(self, x_enc, x_mark_enc, x_dec, x_mark_dec):
+    def forecast(self, x_enc):
         means = x_enc.mean(1, keepdim=True)
         x_enc = x_enc - means
         stdev = torch.sqrt(
@@ -116,4 +103,4 @@ class Model(nn.Module):
         return dec_out
 
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask=None):
-        return self.forecast(x_enc, x_mark_enc, x_dec, x_mark_dec)
+        return self.forecast(x_enc)
