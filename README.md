@@ -12,7 +12,7 @@ We propose the Generative Pretrained Hierarchical Transformer (GPHT) model to ex
 - **Auto-regressive forecasting**. GPHT forecasts in an auto-regressive manner both in the training and inferencing procedure. Compared to the conventional one-step generation schema, our approach can better model the temporal dependencies within the predicted series. Furthermore, since no customized forecasting head tailored for certain horizon length settings, GPHT can flexibly forecast at arbitrary horizon lengths.
 - **Hierarchical architecture**. We introduce the hierarchical decoder-only transformers with the iterative residual learning strategy in GPHT, enabling the model to capture the multi-scale representations and the diverse patterns in the mixed dataset.
 
-![](figs\framework.png)
+![](figs/framework.png)
 
 
 
@@ -22,7 +22,7 @@ We conduct comparison experiments on 8 widely used datasets with mainstream self
 
 **Full data results**
 
-![](figs\full_data.png)
+![](figs/full_data.png)
 
 **Few shot results**
 
@@ -46,7 +46,7 @@ This repo is built on the pioneer works. We appreciate the following GitHub repo
 
 [Autoformer](https://github.com/thuml/Autoformer)
 
-[Time-Series-Library]([thuml/Time-Series-Library: A Library for Advanced Deep Time Series Models. (github.com)](https://github.com/thuml/Time-Series-Library?tab=readme-ov-file))
+[Time-Series-Library](https://github.com/thuml/Time-Series-Library?tab=readme-ov-file))
 
 
 
