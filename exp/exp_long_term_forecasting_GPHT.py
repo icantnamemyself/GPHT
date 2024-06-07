@@ -172,8 +172,7 @@ class Exp_Long_Term_Forecast_GPHT(Exp_Basic):
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
-            # test_loss = self.vali(test_data, test_loader, criterion)
-            _, test_loss = self.test(setting)
+            test_loss = self.vali(test_data, test_loader, criterion)
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
@@ -239,15 +238,13 @@ class Exp_Long_Term_Forecast_GPHT(Exp_Basic):
                     pred_tmp.append(outputs[:, -self.args.token_len:, f_dim:])
 
                 pred = torch.cat(pred_tmp, dim=1).detach().cpu().numpy()[:, :self.args.ar_pred_len, :]
-                # pred = self.model.multi_step_forecast(batch_x, itrs).detach().cpu().numpy()
                 preds.append(pred)
                 trues.append(true)
-                # if i % 1 == 0:
-                #     # print(np.average(loss_san), np.average(loss_token))
-                #     input = batch_x_backup.detach().cpu().numpy()
-                #     gt = np.concatenate((input[0, :, 0], true[0, :, 0]), axis=0)
-                #     pd = np.concatenate((input[0, :, 0], pred[0, :, 0]), axis=0)
-                #     visual(gt, pd, os.path.join(folder_path, str(i) + '.svg'))
+                if i % 5 == 0:
+                    input = batch_x_backup.detach().cpu().numpy()
+                    gt = np.concatenate((input[0, :, 0], true[0, :, 0]), axis=0)
+                    pd = np.concatenate((input[0, :, 0], pred[0, :, 0]), axis=0)
+                    visual(gt, pd, os.path.join(folder_path, str(i) + '.svg'))
 
         preds = np.array(preds, dtype=object)
         trues = np.array(trues, dtype=object)

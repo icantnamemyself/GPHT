@@ -46,7 +46,7 @@ This repo is built on the pioneer works. We appreciate the following GitHub repo
 
 [Autoformer](https://github.com/thuml/Autoformer)
 
-[Time-Series-Library](https://github.com/thuml/Time-Series-Library?tab=readme-ov-file))
+[Time-Series-Library](https://github.com/thuml/Time-Series-Library?tab=readme-ov-file)
 
 
 
@@ -55,5 +55,10 @@ This repo is built on the pioneer works. We appreciate the following GitHub repo
 If you find this repository useful for your work, please consider citing it as follows:
 
 ```bibtex
-TBD
+@inproceedings{liu2024generative,
+  title={Generative Pretrained Hierarchical Transformer for Time Series Forecasting},
+  author={Liu, Zhiding and Yang Jiqian and Cheng Mingyue and Luo Yucong and Li Zhi},
+  booktitle={Proceedings of the 30th ACM SIGKDD conference on knowledge discovery and data mining},
+  year={2024}
+}
 ```

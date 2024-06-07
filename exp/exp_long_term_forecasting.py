@@ -179,7 +179,6 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         test_data, test_loader = self._get_data(flag='test')
         if test:
             print('loading model')
-            setting = 'long_term_forecast_weather_96_720_DLinear_pretrain_ftM_sl336_ll48_pl96_dm512_nh8_el2_dl1_df2048_fc1_ebtimeF_dtTrue_Exp_0'
             self.model.load_state_dict(
                 torch.load(os.path.join(self.args.checkpoints + setting, 'checkpoint.pth'), map_location=self.device))
 
@@ -229,14 +228,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
                 preds.append(pred)
                 trues.append(true)
-                # if i % 1 == 0:
-                #     input = batch_x.detach().cpu().numpy()
-                #     if test_data.scale and self.args.inverse:
-                #         shape = input.shape
-                #         input = test_data.inverse_transform(input.squeeze(0)).reshape(shape)
-                #     gt = np.concatenate((input[0, :, -1], true[0, :, -1]), axis=0)
-                #     pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
-                #     visual(gt, pd, os.path.join(folder_path, str(i) + '.svg'))
+                if i % 5 == 0:
+                    input = batch_x.detach().cpu().numpy()
+                    gt = np.concatenate((input[0, :, 0], true[0, :, 0]), axis=0)
+                    pd = np.concatenate((input[0, :, 0], pred[0, :, 0]), axis=0)
+                    visual(gt, pd, os.path.join(folder_path, str(i // 1) + '.svg'))
 
         preds = np.array(preds, dtype=object)
         trues = np.array(trues, dtype=object)

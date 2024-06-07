@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--task_name', type=str, required=False, default='long_term_forecast_GPHT',
                         help='task name, options:[long_term_forecast, short_term_forecast, imputation, classification, anomaly_detection]')
-    parser.add_argument('--is_training', type=int, required=False, default=1, help='status')
+    parser.add_argument('--is_training', type=int, required=False, default=0, help='status')
     parser.add_argument('--model_id', type=str, required=False, default='test', help='model id')
     parser.add_argument('--model', type=str, required=False, default='GPHT',
                         help='model name, options: [Autoformer, Transformer, TimesNet]')
@@ -52,9 +52,9 @@ if __name__ == '__main__':
     parser.add_argument('--percent', type=int, default=100)
 
     # data loader
-    parser.add_argument('--data', type=str, required=False, default='pretrain', help='dataset type')
+    parser.add_argument('--data', type=str, required=False, default='ETTh1', help='dataset type')
     parser.add_argument('--root_path', type=str, default='dataset/ETT-small/', help='root path of the data file')
-    parser.add_argument('--data_path', type=str, default='ETTm2.csv', help='data file')
+    parser.add_argument('--data_path', type=str, default='ETTh1.csv', help='data file')
 
     parser.add_argument('--features', type=str, default='M',
                         help='forecasting task, options:[M, S, MS]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate')

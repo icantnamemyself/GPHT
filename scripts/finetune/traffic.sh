@@ -1,6 +1,6 @@
 device=0
 
-# finetune
+ finetune
 python run.py \
     --is_training 1 \
     --load_pretrain 1 \
@@ -16,7 +16,7 @@ python run.py \
     --gpu $device
 
 # evalution
-for pred in 96 192 336; do
+for pred in 96 192 336 720; do
   python run.py \
     --is_training 0 \
     --transfer_data traffic \
