@@ -36,7 +36,7 @@ We conduct comparison experiments on 8 widely used datasets with mainstream self
 
 ### Usage
 
-We provide the default hyper-parameter settings in `run.py` to perform pretraining, and ready-to-use scripts for fine-tuning on each datasets in `scripts/finetune`.
+We provide the default hyper-parameter settings in `scripts/prertrain.sh` to perform pretraining, and ready-to-use scripts for fine-tuning on each datasets in `scripts/finetune`.
 
 
 
